@@ -22,6 +22,29 @@
     margin: 20px;
 }
 
+.player {
+    display: inline-block;
+    margin: 0 20px 0 0;
+}
+
+.ticket {
+    margin: 20px 0 0 0;
+}
+
+.ticket-row {
+    height: 25px;
+    border: 1px black;
+}
+
+.ticket-column {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    border: 1px black solid;
+    vertical-align: middle;
+    line-height: 25px;
+}
+
 @keyframes App-logo-spin {
     from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

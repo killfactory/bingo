@@ -3,9 +3,13 @@ import logo from './logo.svg';
 import './App.css';
 
 class App extends Component {
+    getArrayLength() {
+        return 90;
+    }
+
     getInitialState() {
         return {
-            counters: new CountersLogic(),
+            counters: new CountersLogic(undefined, undefined, this.getArrayLength()),
             playedCounters: [],
             players: [],
             isStarted: false,
@@ -24,7 +28,7 @@ class App extends Component {
     }
 
     addPlayer() {
-        const player = new Player(this.state.playerName);
+        const player = new Player(this.state.playerName, this.getArrayLength());
         const players = this.state.players.concat(player);
         this.setState({
             players: players,
@@ -96,9 +100,8 @@ class RandomizerWithoutRepeats {
 }
 
 class CountersLogic {
-    constructor(counters, current) {
+    constructor(counters, current, arrayLength) {
         if (counters === undefined) {
-            let arrayLength = 90;
             let randomizer = new RandomizerWithoutRepeats(arrayLength);
             this.counters = Array(arrayLength).fill().map(() => randomizer.getNextRandomValue());
             this.currentValue = NaN;
@@ -123,26 +126,41 @@ class CountersLogic {
     }
 }
 
-class Player {
-    constructor(name) {
-        this.tickets = Array(3);
-        this.name = name;
+class ArraySplitter {
+    constructor(values) {
+        this.values = values;
     }
 
-    getName() {
-        return this.name;
+    getSplit(base, index) {
+        const arr = [];
+        for (let i = index; i < this.values.length; i = i + base) {
+            arr.push(this.values[i]);
+        }
+        return arr;
+    }
+}
+
+class Player {
+    constructor(name, arrayLength) {
+        let ticketCount = 3;
+        this.name = name;
+        const generator = new RandomizerWithoutRepeats(arrayLength);
+        const splitter = new ArraySplitter(Array(45).fill().map(() => generator.getNextRandomValue()).sort((a, b) => a - b));
+        this.tickets = Array(ticketCount).fill().map((e, i) => new Ticket(splitter.getSplit(ticketCount, i)));
     }
 }
 
 class Ticket {
-    constructor() {
-        this.rows = Array(3);
+    constructor(values) {
+        let rowCount = 3;
+        const splitter = new ArraySplitter(values);
+        this.rows = Array(rowCount).fill().map((e, i) => new Row(splitter.getSplit(rowCount, i)));
     }
 }
 
 class Row {
-    constructor() {
-        this.columns = Array(9);
+    constructor(values) {
+        this.columns = Array(5).fill().map((e, i) => values[i]);
     }
 }
 
@@ -192,13 +210,51 @@ class Players extends Component {
         const playerImages = [];
         let players = this.props.players;
         for (let i = 0; i < players.length; i++) {
-            let element = i === 0
-                ? <b>{players[i].name}</b>
-                : <b>, {players[i].name}</b>;
-            playerImages.push(element);
+            playerImages.push(<PlayerVisual player={players[i]} />);
         }
-        return <p>{playerImages}</p>;
+        return <div>{playerImages}</div>;
     }
 }
+
+class PlayerVisual extends Component {
+    render() {
+        const result = [];
+        const player = this.props.player;
+        result.push(<div>{player.name}</div>);
+        for (let i = 0; i < player.tickets.length; i++) {
+            result.push(<TicketVisual ticket={player.tickets[i]} />);
+        }
+        return <div className="player">{result}</div>;
+    }    
+}
+
+class TicketVisual extends Component {
+    render() {
+        const result = [];
+        const ticket = this.props.ticket;
+        for (let i = 0; i < ticket.rows.length; i++) {
+            result.push(<RowVisual row={ticket.rows[i]} />);
+        }
+        return <div className="ticket">{result}</div>;
+    }
+}
+
+class RowVisual extends Component {
+    render() {
+        const result = [];
+        const row = this.props.row;
+        for (let i = 0; i < row.columns.length; i++) {
+            result.push(<ColumnVisual column={row.columns[i]} />);
+        }
+        return <div className="ticket-row">{result}</div>;
+    }
+}
+
+class ColumnVisual extends Component {
+    render() {
+        return <div className="ticket-column">{this.props.column}</div>;
+    }
+}
+
 
 export default App;
